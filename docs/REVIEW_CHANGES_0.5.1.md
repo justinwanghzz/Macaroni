@@ -1,0 +1,9 @@
+# Editor and export refinements — 0.5.1 (build 11)
+
+- Editor: compact, rounded toolbar with Open, Save, a Save As menu, Search and PDF export. Previous/Next appear only inside the search strip, opened with Search or Command-F. The strip includes match count, highlighted results, wrapping next/previous navigation and Escape to close. Command-G / Shift-Command-G remain available. Search is case insensitive and supports Unicode.
+- Editor PDF export: no permanent filename/destination footer. Export PDF opens an attached dialog with filename, destination, Change and Export/Cancel controls. Default names, source-folder behavior and collision protection remain in place.
+- All export windows: show “Export to” with only the folder name and a Change control. Full paths are available on hover for disambiguation, rather than as a long line in the layout. The shared component covers image adjustments, PDF organizer, image workflows, video compression/speed and the editor export dialog.
+- Video speed: removed the explanatory paragraph. For multiple inputs, Preview selects the clip, each clip remembers its own speed, and export applies those individual speeds with matching filenames. Apply this speed to all is optional. The export button states the batch count.
+- Workflow steps: action dropdowns restored alongside Add step. Changing an action initializes its appropriate settings. Choosing PDF moves the step to the end and prevents duplicate PDF steps.
+
+Validation: 36 core tests passed. The isolated scripted app smoke passed custom search/Unicode/wrapping, export-sheet cancellation, per-video preview/rate persistence and actual batch durations, plus workflow dropdown defaults/PDF ordering. No computer-use automation was used; hands-on styling and interaction review is left to the reviewer.

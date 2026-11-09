@@ -1,0 +1,22 @@
+[
+  {
+    "name": "markdown-it",
+    "version": "15.0.3",
+    "url": "https://registry.npmjs.org/markdown-it/-/markdown-it-15.0.3.tgz",
+    "sha256": "98a7453983ab0e268c17dbd5260bf7190ba46b4cca912327fc1c1a2578e4b56d",
+    "integrity": "sha512-+Az7Ojz3iRGu8KYMvJ6xVhvrxP3eE+vEtJX75Ow88XBpcQNV/0lGX5ZynIIBftREo4DC2jsveAMDaeltmm8QvQ=="
+  },
+  {
+    "name": "katex",
+    "version": "0.19.1",
+    "url": "https://registry.npmjs.org/katex/-/katex-0.19.1.tgz",
+    "sha256": "24da5a599eb2fcede2e270b99a6ff48bca816beecc95feeb84e8cccbd1bb34fd",
+    "integrity": "sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA=="
+  },
+  {
+    "name": "ZIPFoundation",
+    "version": "0.9.20",
+    "url": "https://codeload.github.com/weichsel/ZIPFoundation/tar.gz/refs/tags/0.9.20",
+    "sha256": "3ddad93f81480d141f15d9b8bdc276a21c5242446c179672c2e787799a423b5e"
+  }
+]

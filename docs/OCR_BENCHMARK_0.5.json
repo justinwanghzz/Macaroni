@@ -1,0 +1,20 @@
+{
+  "1page" : {
+    "afterSeconds" : 0.17583703994750977,
+    "afterText" : "## Page 1\n\nUTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换测试\n",
+    "beforeSeconds" : 0.21169793605804443,
+    "beforeText" : "UTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换 测试"
+  },
+  "3page" : {
+    "afterSeconds" : 0.44326794147491455,
+    "afterText" : "## Page 1\n\nUTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换测试\n\n## Page 2\n\nUTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换测试\n\n## Page 3\n\nUTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换测试\n",
+    "beforeSeconds" : 0.5118870735168457,
+    "beforeText" : "UTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换 测试UTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换 测试UTILITY OCR SAMPLE\n\nLocal image and scanned PDF conversion\n\nFirst paragraph: the files stay on this Mac.\n\nSecond paragraph: check the Markdown output.\n\n文件转换 测试"
+  },
+  "afterPhases" : {
+    "height" : 1445,
+    "recognitionSeconds" : 0.11947298049926758,
+    "renderSeconds" : 0.010143041610717773,
+    "width" : 2600
+  }
+}

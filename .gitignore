@@ -1,0 +1,13 @@
+.build/
+build/
+.swiftpm/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+TestResults/
+.build-log
+.test-log
+.smoke-log
+.package-log
+.review-ui-log
+.release-check-log
