@@ -25,7 +25,9 @@ Macaroni lives in the menu bar. Its menu opens the file shelf, clipboard, Markdo
 
 Open `Package.swift` in Xcode to edit the project. The build script produces the real `.app` bundle, including offline renderer resources, metadata and an ad-hoc signature.
 
-## What's included in 0.5.5
+## What's included in 0.5.6
+
+0.5.6 makes rotation-preview trigonometry explicit for the GitHub macOS toolchain.
 
 0.5.5 adds the golden macaroni app icon and matching monochrome menu-bar mark.
 

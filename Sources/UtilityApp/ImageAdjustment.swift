@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import SwiftUI
 import UtilityCore
 
@@ -248,9 +249,11 @@ struct RotationPreview:View {
     let image:NSImage,size:CGSize,angle:Double,whiteCanvas:Bool
     var body:some View {
         GeometryReader { proxy in
-            let radians=(angle.isFinite ? angle:0) * .pi/180
-            let w=abs(cos(radians))*size.width+abs(sin(radians))*size.height
-            let h=abs(sin(radians))*size.width+abs(cos(radians))*size.height
+            let radians:Double=(angle.isFinite ? angle:0) * Double.pi/180
+            let cosine:CGFloat=CGFloat(abs(Darwin.cos(radians)))
+            let sine:CGFloat=CGFloat(abs(Darwin.sin(radians)))
+            let w:CGFloat=cosine*size.width+sine*size.height
+            let h:CGFloat=sine*size.width+cosine*size.height
             let scale=min(proxy.size.width/max(1,w),proxy.size.height/max(1,h))
             ZStack {
                 if whiteCanvas {Rectangle().fill(.white).frame(width:w*scale,height:h*scale)}
