@@ -1,7 +1,7 @@
 # Complete feature reference
 
 
-This reference describes **Macaroni 0.5.7 / build 17**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
+This reference describes **Macaroni 0.5.8 / build 18**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
 
 ### A. File types at a glance
 
@@ -26,7 +26,7 @@ A recognized extension is not a promise that every codec or damaged file can be 
 | --- | --- |
 | Convert format | Direct JPEG, PNG and HEIC drop targets; one file or a batch; new output files |
 | Crop | Visual selection with corner handles, drag-to-move/new selection and pixel-size readout; Free, 1:1, 4:3, 3:2, 16:9 and 9:16 ratios; individual crop review for multiple images |
-| Resize | Width and height in pixels; lock/unlock proportions; scale slider; proportional resizing or intentional stretching when unlocked; preview before applying |
+| Resize | Width and height in pixels, with cleared fields left blank until you enter new values; lock/unlock proportions; scale slider; proportional resizing or intentional stretching when unlocked; preview before applying |
 | Compress | Smaller–Sharper slider, preview, original/output-size comparison and an actual trial-encode estimate; PNG color reduction retains alpha; reduction depends on the input and is not a guaranteed image byte-size target |
 | Rotate | Live preview; clockwise 90°, 180° and 270° tiles; custom angle field/slider; Reset; expanded canvas retains rotated content |
 | Flip | Separate immediate **Flip H** and **Flip V** actions |

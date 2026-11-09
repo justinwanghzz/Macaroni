@@ -157,7 +157,27 @@ import UtilityCore
             let adjusted=ImageAdjustmentModel(kind:.resizeImage,urls:[fixtures.appendingPathComponent("Large-photo.jpg")])
             for _ in 0..<100 where adjusted.source == nil { try await Task.sleep(nanoseconds:50_000_000) }
             guard adjusted.source != nil else { throw UtilityError.message("Resize preview did not load") }
-            adjusted.changeWidth(300);guard adjusted.height==200 else { throw UtilityError.message("Ratio lock failed") };adjusted.locked=false;adjusted.changeHeight(100);guard adjusted.width==300 else {throw UtilityError.message("Unlocked resize changed the width")}
+            adjusted.changeWidth("300")
+            guard adjusted.height==200 else {throw UtilityError.message("Ratio lock failed")}
+            adjusted.changeWidth("")
+            try await Task.sleep(nanoseconds:250_000_000)
+            guard adjusted.widthText.isEmpty,adjusted.height==200,!adjusted.hasResizeDimensions,adjusted.error.isEmpty else {
+                throw UtilityError.message("Clearing the width did not leave an editable blank")
+            }
+            adjusted.changeHeight("240")
+            guard adjusted.widthText.isEmpty else {throw UtilityError.message("Editing height restored the blank width")}
+            adjusted.changeWidth("450")
+            guard adjusted.height==300,adjusted.hasResizeDimensions else {throw UtilityError.message("Ratio lock did not resume after width entry")}
+            adjusted.changeHeight("")
+            try await Task.sleep(nanoseconds:250_000_000)
+            guard adjusted.heightText.isEmpty,adjusted.width==450,!adjusted.hasResizeDimensions,adjusted.error.isEmpty else {
+                throw UtilityError.message("Clearing the height did not leave an editable blank")
+            }
+            adjusted.changeHeight("200")
+            guard adjusted.width==300 else {throw UtilityError.message("Ratio lock did not resume after height entry")}
+            adjusted.toggleLock();adjusted.changeHeight("100")
+            guard adjusted.width==300 else {throw UtilityError.message("Unlocked resize changed the width")}
+            report["resizeEmptyFieldsAndRatioLock"]=true
             adjusted.setScale(50);guard adjusted.width==900,adjusted.height==300 else {throw UtilityError.message("Resize slider did not scale current dimensions")};adjusted.close()
             let cropped=ImageAdjustmentModel(kind:.cropImage,urls:[fixtures.appendingPathComponent("Large-photo.jpg")])
             for _ in 0..<100 where cropped.source == nil {try await Task.sleep(nanoseconds:50_000_000)}

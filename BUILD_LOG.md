@@ -1,6 +1,6 @@
 # Macaroni — build and iteration history
 
-From the first working draft to **0.5.7**. This history is reconstructed from the saved implementation plans, version notes, validation reports and review log. It is a development summary, not a complete record of every coding session. Dates are included only where the records establish them.
+From the first working draft to **0.5.8**. This history is reconstructed from the saved implementation plans, version notes, validation reports and review log. It is a development summary, not a complete record of every coding session. Dates are included only where the records establish them.
 
 ## Starting point: what we intended to build
 
@@ -31,6 +31,7 @@ Planning records: [implementation plan](docs/INITIAL_PLAN.md), [implementation b
 | **0.5.5 — Macaroni icon** | User requested matching icon artwork and GitHub publication | Added golden macaroni app artwork, native monochrome menu-bar mark and public-repository documentation. |
 | **0.5.6 — Hosted compiler compatibility** | User supplied the failed GitHub build log | Made rotation-preview Double/CGFloat conversions explicit to remove an overloaded cos inference failure in the hosted macOS compiler. |
 | **0.5.7 — Mixed PDF assembly** | Mixed image and PDF drag selection | Replaced separate combine targets with one action. Image pages start before the selected PDF pages, with whole-document and page-level editing before a single export. |
+| **0.5.8 — Resize input** | Clearing a locked dimension restored the previous value | Kept the raw field text during editing and paused preview and export while a dimension is blank. |
 
 ## How the main modules evolved
 

@@ -13,8 +13,8 @@ import UtilityCore
     @Published var source:CGImage?
     @Published var rotationImage:NSImage?
     @Published var preview:NSImage?
-    @Published var width=1.0
-    @Published var height=1.0
+    @Published private(set) var widthText="1"
+    @Published private(set) var heightText="1"
     @Published var locked=true
     @Published var scale=100.0
     @Published var quality=70.0
@@ -34,6 +34,13 @@ import UtilityCore
     var closed=false
     init(kind:ActionKind,urls:[URL]) { self.location=ExportLocation(inputs:urls,filename:"");self.kind=kind;self.inputs=urls;self.urls=urls.filter {AssetKind(url:$0) == .image};load(0,reset:true) }
     var url:URL { urls[index] }
+    private func dimension(_ text:String)->Double {
+        guard let value=try? FloatingPointFormatStyle<Double>.number.parseStrategy.parse(text),value.isFinite else {return 0}
+        return value
+    }
+    var width:Double {dimension(widthText)}
+    var height:Double {dimension(heightText)}
+    var hasResizeDimensions:Bool {width>0 && height>0}
     var step:ActionStep {
         var s=ActionStep(kind:kind)
         switch kind {
@@ -53,20 +60,45 @@ import UtilityCore
                 let loaded=try await Task.detached { let lease=AccessLease(urls:[url]);defer { _=lease };return try ImageEngine.load(url) }.value
                 guard !Task.isCancelled,!closed else { return }
                 source=loaded;rotationImage=NSImage(cgImage:loaded,size:CGSize(width:loaded.width,height:loaded.height));originalSize=CGSize(width:loaded.width,height:loaded.height)
-                if reset { width=Double(loaded.width);height=Double(loaded.height);region=CropRegion();ratio="Free";scale=100 }
+                if reset { widthText=String(loaded.width);heightText=String(loaded.height);region=CropRegion();ratio="Free";scale=100;scaleBase=nil }
                 refresh()
             } catch { self.error=error.localizedDescription }
         }
     }
     func cancelPreview() { debounce?.cancel();worker?.cancel();version=UUID();rendering=false }
     func close() { guard !closed else { return };closed=true;loader?.cancel();cancelPreview();onClose?() }
-    func changeWidth(_ v:Double) { width=v; if locked { height=(v*originalSize.height/originalSize.width).rounded() };synchronizeScale();refresh() }
-    func changeHeight(_ v:Double) { height=v; if locked { width=(v*originalSize.width/originalSize.height).rounded() };synchronizeScale();refresh() }
-    func synchronizeScale() { scale=width.isFinite && width>0 && width<=16000 ? width/originalSize.width*100 : 100;scaleBase=nil }
-    var scaleBase:CGSize?
+    func changeWidth(_ text:String) {
+        widthText=text
+        if locked,(1...16000).contains(width),!heightText.isEmpty {
+            heightText=String(max(1,Int((width*originalSize.height/originalSize.width).rounded())))
+        }
+        dimensionsChanged()
+    }
+    func changeHeight(_ text:String) {
+        heightText=text
+        if locked,(1...16000).contains(height),!widthText.isEmpty {
+            widthText=String(max(1,Int((height*originalSize.width/originalSize.height).rounded())))
+        }
+        dimensionsChanged()
+    }
+    func toggleLock() {
+        locked.toggle()
+        scaleBase=nil
+        if locked {changeWidth(widthText)}
+    }
+    private func dimensionsChanged() {
+        scaleBase=nil
+        if hasResizeDimensions {scale=(1...16000).contains(width) ? width/originalSize.width*100 : 100}
+        refresh()
+    }
+    private var scaleBase:CGSize?
     func setScale(_ value:Double) {
+        guard hasResizeDimensions else {return}
         if scaleBase == nil { scaleBase=CGSize(width:width/max(0.01,scale/100),height:height/max(0.01,scale/100)) }
-        scale=value;width=max(1,(scaleBase!.width*value/100).rounded());height=max(1,(scaleBase!.height*value/100).rounded());refresh()
+        scale=value
+        widthText=String(format:"%.0f",max(1,(scaleBase!.width*value/100).rounded()))
+        heightText=String(format:"%.0f",max(1,(scaleBase!.height*value/100).rounded()))
+        refresh()
     }
     func setRatio(_ value:String) {
         ratio=value
@@ -82,6 +114,10 @@ import UtilityCore
         if kind == .cropImage { rendering=false;return }
         if kind == .rotateImage { rendering=false;if !angle.isFinite || abs(angle)>360 {error="Enter an angle from −360° to 360°"};return }
         let url=self.url,s=self.step,kind=self.kind
+        if kind == .resizeImage {
+            guard !widthText.isEmpty,!heightText.isEmpty else {rendering=false;return}
+            do {try s.validate()} catch {self.error=error.localizedDescription;rendering=false;return}
+        }
         debounce=Task {
             do {
                 try await Task.sleep(nanoseconds:180_000_000);try Task.checkCancellation()
@@ -158,7 +194,7 @@ struct ImageAdjustmentView:View {
             HStack(spacing:12) {
                 if model.onCommitStep == nil {ExportDestinationControl(location:model.location)}
                 Spacer(minLength:8);Button("Cancel") { model.close() }.buttonStyle(ChoicePillStyle()).keyboardShortcut(.cancelAction)
-                Button(model.onCommitStep != nil ? "Use crop" : model.kind == .cropImage ? "Crop" : model.kind == .compressImage ? "Compress" : "Apply") { model.apply() }.buttonStyle(PrimaryActionStyle()).keyboardShortcut(.defaultAction).disabled(model.source==nil || app.busy || !model.error.isEmpty)
+                Button(model.onCommitStep != nil ? "Use crop" : model.kind == .cropImage ? "Crop" : model.kind == .compressImage ? "Compress" : "Apply") { model.apply() }.buttonStyle(PrimaryActionStyle()).keyboardShortcut(.defaultAction).disabled(model.source==nil || app.busy || !model.error.isEmpty || (model.kind == .resizeImage && !model.hasResizeDimensions))
             }
         }.padding(22).utilityStyle()
     }
@@ -168,10 +204,14 @@ struct ImageAdjustmentView:View {
             HStack { ForEach(["Free","1:1","4:3","3:2","16:9","9:16"],id:\.self) { ratio in Button(ratio) { model.setRatio(ratio) }.buttonStyle(ChoicePillStyle(selected:model.ratio==ratio)) };Spacer();Text("\(Int((model.region.width*model.originalSize.width).rounded())) × \(Int((model.region.height*model.originalSize.height).rounded())) px").monospacedDigit().foregroundStyle(.secondary) }
         case .resizeImage:
             VStack(spacing:12) {
-                HStack { Text("Width");TextField("Width",value:Binding(get:{model.width},set:{model.scaleBase=nil;model.changeWidth($0)}),format:.number.precision(.fractionLength(0))).frame(width:95);Text("px").foregroundStyle(.secondary)
-                    Button { model.locked.toggle();model.scaleBase=nil;if model.locked { model.changeWidth(model.width) } } label: { Image(systemName:model.locked ? "lock.fill" : "lock.open") }.help("Lock proportions")
-                    Text("Height");TextField("Height",value:Binding(get:{model.height},set:{model.scaleBase=nil;model.changeHeight($0)}),format:.number.precision(.fractionLength(0))).frame(width:95);Text("px").foregroundStyle(.secondary);Spacer() }
-                HStack { Text("Size");Slider(value:Binding(get:{model.scale},set:{model.setScale($0)}),in:1...200);Text("\(Int(model.scale))%").monospacedDigit().frame(width:48) }
+                HStack {
+                    Text("Width");TextField("Width",text:Binding(get:{model.widthText},set:model.changeWidth)).frame(width:95)
+                    Text("px").foregroundStyle(.secondary)
+                    Button(action:model.toggleLock) { Image(systemName:model.locked ? "lock.fill" : "lock.open") }.help("Lock proportions")
+                    Text("Height");TextField("Height",text:Binding(get:{model.heightText},set:model.changeHeight)).frame(width:95)
+                    Text("px").foregroundStyle(.secondary);Spacer()
+                }
+                HStack { Text("Size");Slider(value:Binding(get:{model.scale},set:{model.setScale($0)}),in:1...200).disabled(!model.hasResizeDimensions);Text("\(Int(model.scale))%").monospacedDigit().frame(width:48) }
             }
         case .compressImage:
             VStack(spacing:10) { HStack { Text("Smaller");Slider(value:$model.quality,in:1...100).onChange(of:model.quality) { _,_ in model.refresh() };Text("Sharper") }

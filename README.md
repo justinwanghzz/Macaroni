@@ -49,7 +49,9 @@ Macaroni lives in the menu bar. Its menu opens the file shelf, clipboard, Markdo
 
 Open `Package.swift` in Xcode if you want to edit the project.
 
-## What's included in 0.5.7
+## What's included in 0.5.8
+
+0.5.8 keeps cleared Resize fields blank while you type. The aspect-ratio lock updates the other dimension when you enter a valid replacement.
 
 0.5.7 adds one **Combine to PDF** drop target for images and PDFs. Image pages start first, followed by the original PDF pages. Reorder either in the shared organizer before exporting one PDF.
 
