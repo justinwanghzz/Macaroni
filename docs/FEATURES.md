@@ -1,7 +1,7 @@
 # Complete feature reference
 
 
-This appendix describes the **included 0.5.5 / build 15**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
+This reference describes **Macaroni 0.5.6 / build 16**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
 
 ### A. File types at a glance
 

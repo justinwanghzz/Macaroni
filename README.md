@@ -10,20 +10,44 @@ Development history: [BUILD_LOG.md](BUILD_LOG.md) tracks the first working draft
 
 Full feature list: [formats, image/video editing, PDFs, editor, shelf, clipboard and workflows](docs/FEATURES.md).
 
-## Run
+## Get started
 
-Requires macOS 14+ and, to build from source, Xcode with command-line tools selected. The packaged binary targets the build machine's architecture.
+### 1. Build from your local source copy (recommended)
+
+Use a **full Xcode installation** compatible with your Mac. Xcode supplies the Swift compiler, macOS SDK, and SwiftUI build components used by the script. The standalone tools installed by `xcode-select --install` failed to compile Macaroni with the tested macOS 27 SDK.
+
+- Install Xcode if needed, then open it once and finish its setup. [Xcode downloads and macOS compatibility](https://developer.apple.com/support/xcode/)
+- In Terminal, run `xcodebuild -version`. If it reports that the active developer directory is a Command Line Tools instance, open **Xcode → Settings → Locations** and choose the installed Xcode under **Command Line Tools**. [Apple’s setup guide](https://developer.apple.com/documentation/xcode/configuring-command-line-tools-settings)
+
+The source includes its dependencies. Once Xcode is set up, you can build offline.
+
+Open Terminal in the folder containing `Package.swift`, then run:
+
+```sh
+/bin/bash Scripts/build.sh release && open build/Macaroni.app
+```
+
+The script builds for your Mac’s architecture and creates an ad-hoc signed app bundle with the offline renderer. Quit any running Macaroni instance before opening the newly built copy.
+
+### 2. Open a prebuilt app
+
+Double-click `Macaroni Universal.app` on an Intel or Apple Silicon Mac running macOS 14 or later. The separate `Macaroni.app` in the classroom submission is the Apple Silicon presentation build. The apps run without developer tools. If macOS blocks the first launch, see [Apple's instructions for opening an unnotarized app](https://support.apple.com/102445).
+
+On GitHub, open the latest successful [macOS Actions run](https://github.com/justinwanghzz/Macaroni/actions/workflows/macos.yml) and download the **Macaroni-Universal-macOS** artifact. Unzip the artifact, then unzip `Macaroni-Universal-macOS.zip` inside it. Both executable architectures are checked during packaging. Intel runtime testing is pending.
+
+### 3. Clone the latest source from GitHub
+
+[Macaroni on GitHub](https://github.com/justinwanghzz/Macaroni)
 
 ```sh
 git clone https://github.com/justinwanghzz/Macaroni.git
 cd Macaroni
-Scripts/build.sh
-open build/Macaroni.app
+/bin/bash Scripts/build.sh release && open build/Macaroni.app
 ```
 
 Macaroni lives in the menu bar. Its menu opens the file shelf, clipboard, Markdown/math editor, workflows, Settings, and Recent results. Pause/Resume suspends the utility without quitting. Settings offers Shift, Control-Shift and Option-Shift activation. Fn/Globe is not advertised as an alternative without hardware validation.
 
-Open `Package.swift` in Xcode to edit the project. The build script produces the real `.app` bundle, including offline renderer resources, metadata and an ad-hoc signature.
+Open `Package.swift` in Xcode if you want to edit the project.
 
 ## What's included in 0.5.6
 
@@ -80,9 +104,11 @@ Scripts/package.sh
 Scripts/verify-package.sh
 ```
 
+Run `Scripts/package.sh --universal` with full Xcode to also create `build/Macaroni-Universal-macOS.zip`. The script builds the second architecture, combines the executables and verifies the signature for both. On an Intel Mac, use a compatible Xcode 26 or earlier for native source builds. [Apple’s architecture guidance](https://developer.apple.com/documentation/apple-silicon/porting-your-macos-apps-to-apple-silicon)
+
 The smoke and package-verification checks require a logged-in graphical desktop. They use isolated data and a named test pasteboard. `Scripts/review-ui.sh` opens an isolated developer review app with generated samples and leaves its review controls available; Quit review closes it.
 
-The package is `build/Macaroni-macOS.zip`. The app is an ad-hoc signed development build. Public distribution needs Developer ID signing/notarization. No app-sandbox entitlement is enabled in this build. The minimum deployment target compiles as macOS 14; runtime behavior on other OS versions and Intel hardware needs separate checking.
+The default package is `build/Macaroni-macOS.zip` for the build Mac's architecture. The app is an ad-hoc signed development build. Public distribution needs Developer ID signing/notarization. No app-sandbox entitlement is enabled in this build. The minimum deployment target is macOS 14.
 
 Latest UI testing starts at `../Testing/UI_RETEST_0.5.1.md`. Fifth-pass hands-on testing starts at `../Testing/FIFTH_PASS_RETEST.md`. General regression testing starts at `../Testing/START_HERE.md`, with a quick pass in `QUICK_PASS.md` and broader cases in `FINAL_CHECKLIST.md`, and notes in `FEEDBACK.md` / `REVIEW_LOG.md`. Previous testing folders, results, and version-specific checklists are retained under `Testing/_Archive`. Implementation records remain in `docs/REVIEW_CHANGES_0.4.md`, `docs/VALIDATION_0.4.md`, and the earlier versioned documents.
 

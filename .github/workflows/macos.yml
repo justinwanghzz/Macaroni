@@ -7,9 +7,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test native engines
         run: Scripts/test.sh
-      - name: Package application
-        run: Scripts/package.sh
+      - name: Package native and universal apps
+        run: Scripts/package.sh --universal
       - uses: actions/upload-artifact@v4
         with:
           name: Macaroni-macOS
           path: build/Macaroni-macOS.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Macaroni-Universal-macOS
+          path: build/Macaroni-Universal-macOS.zip
+          if-no-files-found: error
