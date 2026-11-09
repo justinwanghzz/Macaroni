@@ -38,13 +38,16 @@ import UtilityCore
         let image=files.contains { AssetKind(url:$0) == .image }
         var upper:[Choice]=[],lower:[Choice]=[Choice(title:"Shelf",symbol:"tray.and.arrow.down",color:.systemTeal,action:{AppModel.shared.stage($0)})]
         if image { for format in ImageEngine.writableFormats { upper.append(Choice(title:format == "jpg" ? "JPEG" : format.uppercased(),symbol:"photo",color:.systemBlue,accepts:{AssetKind(url:$0) == .image},action:{ self.delegate.convert($0,format:format) })) } }
-        let images=files.filter {AssetKind(url:$0) == .image}
-        let pdfs=files.filter {AssetKind(url:$0) == .pdf}
-        if !images.isEmpty {
-            upper.append(Choice(title:images.count>1 ? "Combine to PDF":"PDF",symbol:"doc.on.doc",color:.systemBlue,accepts:{AssetKind(url:$0) == .image},action:{PageOrganizer.show($0.filter {AssetKind(url:$0) == .image})}))
-        }
-        if !pdfs.isEmpty {
-            lower.append(Choice(title:pdfs.count>1 ? "Combine PDFs":"Adjust PDF",symbol:"square.stack",accepts:{AssetKind(url:$0) == .pdf},action:{PageOrganizer.show($0.filter {AssetKind(url:$0) == .pdf})}))
+        let pdfInputs=files.filter(PageOrganizer.accepts)
+        if !pdfInputs.isEmpty {
+            let title=pdfInputs.count>1 ? "Combine to PDF":(image ? "PDF":"Adjust PDF")
+            let choice=Choice(title:title,symbol:image ? "doc.on.doc":"square.stack",color:image ? .systemBlue:.systemOrange,
+                              accepts:PageOrganizer.accepts,action:PageOrganizer.show)
+            if image {
+                upper.append(choice)
+            } else {
+                lower.append(choice)
+            }
         }
         let offersMarkdown:(URL)->Bool={ [.pdf,.word,.presentation,.text].contains(AssetKind(url:$0)) }
         if files.contains(where:offersMarkdown) { upper.append(Choice(title:"Markdown",symbol:"doc.text",color:.systemBlue,accepts:offersMarkdown,action:{self.delegate.action(.documentMarkdown,urls:$0.filter(offersMarkdown))})) }

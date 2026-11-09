@@ -208,6 +208,42 @@ import UtilityCore
             report["perVideoPreviewSpeedPersistenceAndBatchExport"]=true
 
 
+            let photo=fixtures.appendingPathComponent("Large-photo.jpg")
+            let transparent=fixtures.appendingPathComponent("Transparent.png")
+            let sourcePDF=fixtures.appendingPathComponent("Alpha-pages.pdf")
+            let wordFile=fixtures.appendingPathComponent("Brief.docx")
+            let mixedInputs=[sourcePDF,photo,wordFile,transparent]
+            delegate.monitor.present(mixedInputs)
+            let pdfChoices=delegate.monitor.panels.compactMap {($0.contentView as? ActionDropView)?.choice}.filter {$0.title.contains("PDF")}
+            guard pdfChoices.count==1,let combine=pdfChoices.first,combine.title=="Combine to PDF",
+                  let accepts=combine.accepts,mixedInputs.filter(accepts)==[sourcePDF,photo,transparent] else {
+                throw UtilityError.message("Mixed drag did not offer a single Combine to PDF action")
+            }
+            delegate.monitor.hide()
+            combine.action(mixedInputs)
+            guard let window=delegate.windows.values.first(where:{$0.title=="Combine to PDF"}),
+                  let mixed=(window.contentView as? NSHostingView<PageOrganizerView>)?.rootView.model else {
+                throw UtilityError.message("Combine to PDF did not open the PDF organizer")
+            }
+            for _ in 0..<100 where mixed.busy {try await Task.sleep(nanoseconds:20_000_000)}
+            guard let source=PDFDocument(url:sourcePDF),source.pageCount>0,mixed.error==nil,mixed.documentMode,
+                  mixed.pages.map(\.url)==[photo,transparent]+Array(repeating:sourcePDF,count:source.pageCount),
+                  mixed.pages.map(\.pageIndex)==[nil,nil]+(0..<source.pageCount).map(Optional.some) else {
+                throw UtilityError.message("Mixed PDF organizer did not place image pages before the original PDF pages")
+            }
+            mixed.imageSize = .letter
+            mixed.location.directory=home;mixed.location.filename="Mixed pages.pdf"
+            mixed.export(window:window)
+            for _ in 0..<200 where mixed.busy {try await Task.sleep(nanoseconds:20_000_000)}
+            guard mixed.error==nil,let result=PDFDocument(url:home.appendingPathComponent("Mixed pages.pdf")),
+                  result.pageCount==source.pageCount+2,
+                  result.page(at:0)?.bounds(for:.mediaBox).size==ImagePageSize.letter.size,
+                  let originalText=source.page(at:0)?.string,!originalText.isEmpty,
+                  result.page(at:2)?.string==originalText else {
+                throw UtilityError.message("Mixed PDF export did not preserve image layout and searchable PDF text")
+            }
+            report["mixedImageAndPDFCombine"]=true
+
             let imagePDF=home.appendingPathComponent("One-image.pdf")
             let imagePages=try PDFAssembly.load([fixtures.appendingPathComponent("Large-photo.jpg"),fixtures.appendingPathComponent("Transparent.png")])
             try PDFAssembly.write(imagePages,to:imagePDF)

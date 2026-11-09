@@ -1,7 +1,7 @@
 # Complete feature reference
 
 
-This reference describes **Macaroni 0.5.6 / build 16**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
+This reference describes **Macaroni 0.5.7 / build 17**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
 
 ### A. File types at a glance
 
@@ -9,7 +9,7 @@ This reference describes **Macaroni 0.5.6 / build 16**, organized by input type 
 | --- | --- | --- |
 | Still images | JPEG/PNG/HEIC conversion; crop, resize, compress, rotate, flip; PDF creation; image workflows; OCR to Markdown through the shelf | Shift-drag for image tools, PDF and Preset; Shelf → Process selected for OCR |
 | Videos | Size-target compression, mute, playback-speed adjustment and preview | Shift-drag |
-| PDFs | Text/OCR to Markdown; combine documents; reorder, rotate and remove pages | Shift-drag → Markdown, Adjust PDF or Combine PDFs |
+| PDFs | Text/OCR to Markdown; combine documents; reorder, rotate and remove pages | Shift-drag → Markdown, Adjust PDF or Combine to PDF |
 | Word `.docx` | Extract content and basic formatting to Markdown | Shift-drag → Markdown |
 | PowerPoint `.pptx` | Extract slide text/tables to Markdown in presentation order | Shift-drag → Markdown |
 | Markdown `.md`, `.markdown` | Source editing, live preview, supported math, search, save and PDF export | Shift-drag → Live Editor, or menu-bar menu → Markdown editor |
@@ -63,9 +63,9 @@ Compression may reduce resolution and frame rate to meet the budget (up to a 192
 | Readable PDF → Markdown | Extract text with page headings and page order preserved |
 | Scanned PDF → Markdown | Automatically OCR pages without readable text; local recognition for printed English/Chinese; progress advances per page |
 | Adjust one PDF | Page thumbnails, selection, reordering, 90° rotation increments and removal; export a separate edited PDF |
-| Combine PDFs | Start with whole-document ordering, then switch to **Organize pages** for individual/multiple-page ordering, rotation and removal |
+| Combine to PDF | Start with whole-document ordering, then switch to **Organize pages** for individual/multiple-page ordering, rotation and removal |
 | Interleave PDF pages | Mix pages from different documents; switching views does not silently undo the current interleaved order |
-| Mix images and PDFs | Use **Add files** in the shared PDF organizer to assemble images and PDF pages together; existing PDF page content/text is retained |
+| Mix images and PDFs | Shift-drag a mixed selection onto **Combine to PDF**. Images become pages at the front, followed by the selected PDF pages. Reorder files or individual pages, then export one PDF. Existing PDF text stays searchable |
 | PDF export controls | Editable filename; compact destination/Change control; new uniquely named output; organizer closes after successful export |
 | Word `.docx` → Markdown | Paragraphs, headings, basic bold/italic, lists, tables and supported links; text extraction rather than a visual replica of the Word layout |
 | PowerPoint `.pptx` → Markdown | Slide text, supported bullets and tables; follows the presentation's slide order rather than filename sorting |

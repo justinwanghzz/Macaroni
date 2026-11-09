@@ -20,7 +20,12 @@ import UniformTypeIdentifiers
     let location:ExportLocation
     var onExport:((URL)->Void)?
     init(urls:[URL],name:String) {
-        location=ExportLocation(inputs:urls,filename:AppModel.shared.settings.naming.pdfName(inputs:urls));windowName=name;documentMode=urls.count>1 && urls.allSatisfy {AssetKind(url:$0) == .pdf};add(urls)
+        location=ExportLocation(inputs:urls,filename:AppModel.shared.settings.naming.pdfName(inputs:urls))
+        windowName=name
+        let images=urls.filter {AssetKind(url:$0) == .image}
+        let pdfs=urls.filter {AssetKind(url:$0) == .pdf}
+        documentMode=images.count+pdfs.count>1 && !pdfs.isEmpty
+        add(images+pdfs)
     }
     var documents:[AssemblyPage] {var seen=Set<UUID>();return pages.filter {seen.insert($0.documentID).inserted}}
     var visiblePages:[AssemblyPage] {documentMode ? documents:pages}
@@ -79,10 +84,11 @@ import UniformTypeIdentifiers
 }
 
 @MainActor enum PageOrganizer {
+    static func accepts(_ url:URL)->Bool {[AssetKind.image,.pdf].contains(AssetKind(url:url))}
     static func show(_ urls:[URL]) {
         guard !delegate.isPaused else {return}
-        let files=urls.filter {[AssetKind.image,.pdf].contains(AssetKind(url:$0))};guard !files.isEmpty else {return}
-        let name=files.count==1 && AssetKind(url:files[0]) == .pdf ? "Adjust PDF":"Create PDF"
+        let files=urls.filter(accepts);guard !files.isEmpty else {return}
+        let name=files.count>1 ? "Combine to PDF":(AssetKind(url:files[0]) == .pdf ? "Adjust PDF":"Create PDF")
         let model=PageOrganizerModel(urls:files,name:name)
         // Independent windows preserve any unfinished arrangement from a previous invocation.
         delegate.show(name+" · "+String(UUID().uuidString.prefix(5)),view:PageOrganizerView(model:model),size:NSSize(width:860,height:740),title:name)

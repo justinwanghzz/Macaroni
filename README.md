@@ -49,7 +49,9 @@ Macaroni lives in the menu bar. Its menu opens the file shelf, clipboard, Markdo
 
 Open `Package.swift` in Xcode if you want to edit the project.
 
-## What's included in 0.5.6
+## What's included in 0.5.7
+
+0.5.7 adds one **Combine to PDF** drop target for images and PDFs. Image pages start first, followed by the original PDF pages. Reorder either in the shared organizer before exporting one PDF.
 
 0.5.6 makes rotation-preview trigonometry explicit for the GitHub macOS toolchain.
 
