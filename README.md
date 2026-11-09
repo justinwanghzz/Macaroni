@@ -2,6 +2,8 @@
 
 <img src="Config/MacaroniIcon.png" width="128" alt="Macaroni app icon">
 
+[GitHub repository](https://github.com/justinwanghzz/Macaroni)
+
 A local, open-source macOS utility that comes to the file you are working with. Start dragging a file in Finder, then hold **Shift** to reveal format choices above the file and editing tools below it. Drop onto an action to continue.
 
 Development history: [BUILD_LOG.md](BUILD_LOG.md) tracks the first working draft, review-driven changes, version milestones and validation records.
@@ -13,6 +15,8 @@ Full feature list: [formats, image/video editing, PDFs, editor, shelf, clipboard
 Requires macOS 14+ and, to build from source, Xcode with command-line tools selected. The packaged binary targets the build machine's architecture.
 
 ```sh
+git clone https://github.com/justinwanghzz/Macaroni.git
+cd Macaroni
 Scripts/build.sh
 open build/Macaroni.app
 ```
