@@ -11,11 +11,19 @@ public final class AccessLease {
 
 public enum FileServices {
     private static let outputLock = NSLock()
+    private static let transferLock = NSLock()
     public static func bytes(_ url: URL) -> Int64 { (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0 }
     public static func sizeLabel(_ url: URL) -> String { ByteCountFormatter.string(fromByteCount: bytes(url), countStyle: .file) }
 
     /// The move into the destination is serialized with collision-free name selection.
     public static func commit(_ temporary: URL, to directory: URL, baseName: String, exact: Bool = false, collisionSeparator:String="_") throws -> URL {
+        let safeBase = baseName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        return try commitNamed(temporary, to: directory, baseName: safeBase, extension: temporary.pathExtension,
+                               exact: exact, collisionSeparator: collisionSeparator)
+    }
+
+    private static func commitNamed(_ temporary: URL, to directory: URL, baseName: String, extension ext: String,
+                                    exact: Bool, collisionSeparator: String) throws -> URL {
         outputLock.lock(); defer { outputLock.unlock() }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fm = FileManager.default
@@ -30,11 +38,9 @@ public enum FileServices {
             do { try fm.copyItem(at:temporary,to:staged) } catch { try? fm.removeItem(at:folder);throw error }
         }
         defer { if let stagingFolder { try? fm.removeItem(at:stagingFolder) } }
-        let ext = temporary.pathExtension
-        let safeBase = baseName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         var index = 1
         while index < 100000 {
-            let name = safeBase + (index == 1 ? "" : "\(collisionSeparator)\(index)")
+            let name = baseName + (index == 1 ? "" : "\(collisionSeparator)\(index)")
             let stem = directory.appendingPathComponent(name)
             let target = ext.isEmpty ? stem : stem.appendingPathExtension(ext)
             if exact && FileManager.default.fileExists(atPath: target.path) { throw UtilityError.message("A file with that name already exists") }
@@ -55,25 +61,78 @@ public enum FileServices {
     }
 
     public static func transfer(_ source: URL, to directory: URL, move: Bool, promisedName: String? = nil) throws -> URL {
-        guard promisedName != nil || source.standardizedFileURL.deletingLastPathComponent() != directory.standardizedFileURL else {
-            throw UtilityError.message("This file is already in the selected folder")
+        transferLock.lock()
+        defer { transferLock.unlock() }
+        let sourcePath = source.resolvingSymlinksInPath().standardizedFileURL
+        let destinationPath = directory.resolvingSymlinksInPath().standardizedFileURL
+        guard promisedName != nil || sourcePath.deletingLastPathComponent().path != destinationPath.path else {
+            throw UtilityError.message("This item is already in the selected folder")
         }
         try Task.checkCancellation()
-        guard (try source.resourceValues(forKeys: [.isRegularFileKey])).isRegularFile == true else { throw UtilityError.message("Copy and move currently support regular files only") }
         let fm = FileManager.default
+        let kind = try source.resourceValues(forKeys: [.isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey])
+        let isFolder = kind.isDirectory == true
+        guard kind.isSymbolicLink != true, isFolder || kind.isRegularFile == true else {
+            throw UtilityError.message("Choose a regular file or folder")
+        }
+        if isFolder {
+            // Check the nearest existing directory, including aliases through symlinks and case variants.
+            var ancestor = destinationPath
+            while ancestor.path != "/", !fm.fileExists(atPath: ancestor.path) {
+                ancestor.deleteLastPathComponent()
+            }
+            var relationship = FileManager.URLRelationship.other
+            try fm.getRelationship(&relationship, ofDirectoryAt: sourcePath, toItemAt: ancestor.resolvingSymlinksInPath())
+            guard relationship == .other else {
+                throw UtilityError.message("A folder cannot be copied or moved into itself")
+            }
+        }
+        let name = promisedName ?? source.lastPathComponent
+        guard !name.isEmpty, name != ".", name != "..", !name.contains("/") else {
+            throw UtilityError.message("Invalid destination name")
+        }
         let work = directory.appendingPathComponent(".utility-transfer-" + UUID().uuidString, isDirectory: true)
         try fm.createDirectory(at: work, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: work) }
-        let temp = work.appendingPathComponent(source.lastPathComponent)
+        let temp = work.appendingPathComponent(name, isDirectory: isFolder)
         try fm.copyItem(at: source, to: temp)
+        guard try matchesCopy(source, temp) else {
+            throw UtilityError.message("The copied contents do not match the source")
+        }
         try Task.checkCancellation()
-        guard bytes(source) == bytes(temp), try digest(source) == digest(temp) else { throw UtilityError.message("Copied file size does not match the source") }
-        let output = try commit(temp, to: directory, baseName: promisedName.map { URL(fileURLWithPath:$0).deletingPathExtension().lastPathComponent } ?? source.deletingPathExtension().lastPathComponent, exact: promisedName != nil,collisionSeparator:" ")
+        let baseName = isFolder ? name : temp.deletingPathExtension().lastPathComponent
+        let output = try commitNamed(temp, to: directory, baseName: baseName, extension: isFolder ? "" : temp.pathExtension,
+                                     exact: promisedName != nil, collisionSeparator: " ")
         if move {
             do { try fm.removeItem(at: source) }
             catch { throw UtilityError.message("Copied to \(output.path), but could not remove the original: \(error.localizedDescription)") }
         }
         return output
+    }
+
+    private static func matchesCopy(_ source: URL, _ copy: URL) throws -> Bool {
+        try Task.checkCancellation()
+        let fm = FileManager.default
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey]
+        let original = try source.resourceValues(forKeys: keys)
+        let duplicate = try copy.resourceValues(forKeys: keys)
+        if original.isSymbolicLink == true {
+            guard duplicate.isSymbolicLink == true else { return false }
+            return try fm.destinationOfSymbolicLink(atPath: source.path) == fm.destinationOfSymbolicLink(atPath: copy.path)
+        }
+        guard duplicate.isSymbolicLink != true else { return false }
+        if original.isDirectory == true {
+            guard duplicate.isDirectory == true else { return false }
+            let names = try fm.contentsOfDirectory(atPath: source.path)
+            guard Set(names) == Set(try fm.contentsOfDirectory(atPath: copy.path)) else { return false }
+            return try names.allSatisfy {
+                try matchesCopy(source.appendingPathComponent($0), copy.appendingPathComponent($0))
+            }
+        }
+        guard original.isRegularFile == true, duplicate.isRegularFile == true, bytes(source) == bytes(copy) else {
+            return false
+        }
+        return try digest(source) == digest(copy)
     }
 }
 

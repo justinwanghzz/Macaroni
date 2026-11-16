@@ -195,6 +195,35 @@ import UtilityCore
             try await withCheckedThrowingContinuation { (continuation:CheckedContinuation<Void,Error>) in writer.filePromiseProvider(provider,writePromiseTo:promiseDestination.appendingPathComponent("Renamed.txt")) { error in if let error {continuation.resume(throwing:error)} else {continuation.resume()} } }
             guard !FileManager.default.fileExists(atPath:promiseSource.path),try String(contentsOf:promiseDestination.appendingPathComponent("Renamed.txt"))=="Disposable promised file" else {throw UtilityError.message("Promised Move failed")}
             report["nativeFilePromiseMove"] = true
+            let folder = home.appendingPathComponent("Shelf-folder.1", isDirectory: true)
+            let nested = folder.appendingPathComponent("Nested", isDirectory: true)
+            try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+            let contents = Data("Disposable folder contents".utf8)
+            try contents.write(to: nested.appendingPathComponent("Note.txt"))
+            model.stage([folder])
+            guard let folderRef = model.shelf.first(where: { $0.path == folder.standardizedFileURL.path }) else {
+                throw UtilityError.message("Folder was not added to the shelf")
+            }
+            let folderWriter = ShelfPromiseWriter(reference: folderRef, move: true)
+            guard folderWriter.contentType == .folder else { throw UtilityError.message("Folder promise has the wrong type") }
+            let folderProvider = RetainedFilePromise(fileType: folderWriter.contentType.identifier, delegate: folderWriter)
+            folderProvider.keeper = folderWriter
+            let folderOutput = promiseDestination.appendingPathComponent("Moved-folder.2", isDirectory: true)
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                folderWriter.filePromiseProvider(folderProvider, writePromiseTo: folderOutput) { error in
+                    if let error { continuation.resume(throwing: error) }
+                    else { continuation.resume() }
+                }
+            }
+            for _ in 0..<30 where model.shelf.contains(where: { $0.id == folderRef.id }) {
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
+            guard !FileManager.default.fileExists(atPath: folder.path),
+                  !model.shelf.contains(where: { $0.id == folderRef.id }),
+                  try Data(contentsOf: folderOutput.appendingPathComponent("Nested/Note.txt")) == contents else {
+                throw UtilityError.message("Promised folder move failed")
+            }
+            report["nativeFolderPromiseMove"] = true
             let kept=home.appendingPathComponent("Keep.txt"),delivered=home.appendingPathComponent("Copy.txt")
             try Data("keep".utf8).write(to:kept);try Data("copy".utf8).write(to:delivered)
             model.stage([kept,delivered])

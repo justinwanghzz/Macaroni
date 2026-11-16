@@ -9,6 +9,10 @@ public enum UtilityError: LocalizedError {
 public enum AssetKind: String, Codable, CaseIterable {
     case image, video, pdf, word, presentation, spreadsheet, markdown, text, other
     public init(url: URL) {
+        if url.hasDirectoryPath || (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+            self = .other
+            return
+        }
         switch url.pathExtension.lowercased() {
         case "jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "gif", "webp", "bmp": self = .image
         case "mov", "mp4", "m4v", "avi", "mkv": self = .video

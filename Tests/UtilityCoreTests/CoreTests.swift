@@ -53,6 +53,38 @@ final class CoreTests: XCTestCase {
         let second = try FileServices.transfer(source,to:destination,move:true)
         XCTAssertNotEqual(first,second); XCTAssertEqual(first.pathExtension, ""); XCTAssertEqual(try Data(contentsOf:first),Data("unchanged".utf8)); XCTAssertFalse(FileManager.default.fileExists(atPath:source.path))
     }
+    func testFolderTransferPreservesTreeAndRejectsNestedDestination() throws {
+        let fm = FileManager.default
+        let source = dir.appendingPathComponent("Folder.jpg", isDirectory: true)
+        let nested = source.appendingPathComponent("Nested", isDirectory: true)
+        let destination = dir.appendingPathComponent("Destination", isDirectory: true)
+        let alias = dir.appendingPathComponent("Nested alias")
+        try fm.createDirectory(at: nested.appendingPathComponent("Empty"), withIntermediateDirectories: true)
+        try fm.createDirectory(at: destination, withIntermediateDirectories: true)
+        try fm.createSymbolicLink(at: alias, withDestinationURL: nested)
+        let data = Data("nested file".utf8)
+        try data.write(to: nested.appendingPathComponent(".hidden"))
+        try fm.createSymbolicLink(atPath: nested.appendingPathComponent("Link").path, withDestinationPath: ".hidden")
+
+        XCTAssertEqual(AssetKind(url: URL(fileURLWithPath: source.path, isDirectory: false)), .other)
+        XCTAssertThrowsError(try FileServices.transfer(source, to: alias, move: true))
+        XCTAssertThrowsError(try FileServices.transfer(source, to: nested.appendingPathComponent("New"), move: true))
+        XCTAssertFalse(fm.fileExists(atPath: nested.appendingPathComponent("New").path))
+        let copy = try FileServices.transfer(source, to: destination, move: false)
+        XCTAssertEqual(copy.lastPathComponent, "Folder.jpg")
+        XCTAssertThrowsError(try FileServices.transfer(source, to: destination, move: true, promisedName: copy.lastPathComponent))
+        XCTAssertTrue(fm.fileExists(atPath: nested.path))
+
+        let moved = try FileServices.transfer(source, to: destination, move: true)
+        XCTAssertEqual(moved.lastPathComponent, "Folder.jpg 2")
+        XCTAssertFalse(fm.fileExists(atPath: source.path))
+        for folder in [copy, moved] {
+            let nestedCopy = folder.appendingPathComponent("Nested")
+            XCTAssertEqual(try Data(contentsOf: nestedCopy.appendingPathComponent(".hidden")), data)
+            XCTAssertEqual(try fm.contentsOfDirectory(atPath: nestedCopy.appendingPathComponent("Empty").path), [])
+            XCTAssertEqual(try fm.destinationOfSymbolicLink(atPath: nestedCopy.appendingPathComponent("Link").path), ".hidden")
+        }
+    }
     func testInvalidWorkflows() throws {
         XCTAssertThrowsError(try WorkflowDefinition(name:"Bad",steps:[.init(kind:.documentMarkdown),.init(kind:.compressImage)]).validate(for:.pdf))
         XCTAssertThrowsError(try ActionStep(kind:.compressVideo,amount:0).validate())

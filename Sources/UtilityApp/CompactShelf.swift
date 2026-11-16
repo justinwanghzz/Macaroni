@@ -155,8 +155,9 @@ struct ShelfFileList:NSViewRepresentable {
             guard references.indices.contains(row) else { return nil };let ref=references[row]
             let cell=NSTableCellView();let image=NSImageView();image.image=NSWorkspace.shared.icon(forFile:ref.url.path);image.imageScaling = .scaleProportionallyUpOrDown;image.wantsLayer=true;image.layer?.cornerRadius=6;image.layer?.masksToBounds=true
             let label=NSTextField(wrappingLabelWithString:ref.url.lastPathComponent);label.font = .systemFont(ofSize:11,weight:.medium);label.textColor = .labelColor;label.alignment = .center;label.maximumNumberOfLines=2;label.lineBreakMode = .byWordWrapping
-            let size=FileServices.bytes(ref.url)
-            let detail=NSTextField(labelWithString:size>0 ? ByteCountFormatter.string(fromByteCount:size,countStyle:.file):ref.url.pathExtension.uppercased())
+            let values=try? ref.url.resourceValues(forKeys:[.isDirectoryKey,.fileSizeKey])
+            let size=Int64(values?.fileSize ?? 0)
+            let detail=NSTextField(labelWithString:values?.isDirectory == true ? "Folder" : (size>0 ? ByteCountFormatter.string(fromByteCount:size,countStyle:.file):ref.url.pathExtension.uppercased()))
             detail.font = .systemFont(ofSize:9);detail.textColor = .secondaryLabelColor;detail.alignment = .center
             for view in [image,label,detail] { cell.addSubview(view);view.translatesAutoresizingMaskIntoConstraints=false }
             if list {
@@ -176,7 +177,7 @@ struct ShelfFileList:NSViewRepresentable {
             guard references.indices.contains(row) else { return nil }
             if writers.isEmpty {deliveryBatch=UUID()}
             let writer=ShelfPromiseWriter(reference:references[row],move:AppModel.shared.settings.moveFiles,clearAfterCopy:AppModel.shared.settings.clearAfterCopy,batch:deliveryBatch);writers.append(writer)
-            let provider=RetainedFilePromise(fileType:UTType(filenameExtension:references[row].url.pathExtension)?.identifier ?? UTType.data.identifier,delegate:writer)
+            let provider=RetainedFilePromise(fileType:writer.contentType.identifier,delegate:writer)
             provider.keeper=writer;return provider
         }
         func tableView(_ tableView:NSTableView,draggingSession session:NSDraggingSession,endedAt screenPoint:NSPoint,operation:NSDragOperation) { writers.removeAll() }
@@ -219,6 +220,12 @@ final class ShelfPromiseWriter:NSObject,NSFilePromiseProviderDelegate {
     let move:Bool
     let batch:UUID
     let clearAfterCopy:Bool
+    var contentType:UTType {
+        let url=reference.url
+        let lease=AccessLease(urls:[url]);defer {_=lease}
+        if (try? url.resourceValues(forKeys:[.isDirectoryKey]))?.isDirectory == true {return .folder}
+        return UTType(filenameExtension:url.pathExtension) ?? .data
+    }
     static let queue:OperationQueue = { let q=OperationQueue();q.name="Macaroni file delivery";q.maxConcurrentOperationCount=2;return q }()
     init(reference:FileReference,move:Bool,clearAfterCopy:Bool=false,batch:UUID=UUID()) { self.reference=reference;self.move=move;self.clearAfterCopy=clearAfterCopy;self.batch=batch }
     func filePromiseProvider(_ provider:NSFilePromiseProvider,fileNameForType fileType:String)->String { reference.url.lastPathComponent }
