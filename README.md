@@ -51,6 +51,8 @@ Open `Package.swift` in Xcode if you want to edit the project.
 
 ## What's included in 0.5.8
 
+The latest build supports copying and moving folders through the **Shelf**, including nested contents.
+
 0.5.8 keeps cleared Resize fields blank while you type. The aspect-ratio lock updates the other dimension when you enter a valid replacement.
 
 0.5.7 adds one **Combine to PDF** drop target for images and PDFs. Image pages start first, followed by the original PDF pages. Reorder either in the shared organizer before exporting one PDF.
@@ -72,7 +74,7 @@ Fifth-pass changes add configurable output names, direct exports, a List/Icons s
 | Module | Behavior |
 | --- | --- |
 | Contextual menu | Image menu: a row of JPEG/PNG/HEIC/PDF formats, Preset below JPEG/PNG on the left and Shelf below HEIC/PDF on the right, then two rows of three image tools; other file types retain their compact/grouped menus; stable screen-edge placement and a brief fade |
-| Shelf | Explicit Shelf drop target; resizable shelf with a 60% screen-height default; List/Icons toggle; native multi-selection and Command-A; Space/double-click preview; drag-out Copy/Move; empty shelf hides |
+| Shelf | Explicit Shelf drop target; resizable shelf with a 60% screen-height default; List/Icons toggle; native multi-selection and Command-A; Space/double-click preview; drag-out Copy/Move for files and folders; empty shelf hides |
 | Image tools | JPEG/PNG/HEIC conversion; interactive crop and ratios; width/height resize with lock and scaling; visual compression with trial-encode size; visual rotation presets and continuous custom-angle preview; separate immediate flips |
 | Video | Source sizes, synchronized percentage/MB targets, relative or fixed batch budgets; H.264/AAC compression with verified output size/duration and cancellation; mute; 0.25×–3× speed export with pitch-preserved audio, selectable previews and individual speeds per clip |
 | Documents | Images and scanned PDF pages to Markdown with local Vision OCR; text PDF, DOCX, PPTX and UTF-8 extraction |
@@ -87,7 +89,9 @@ Conversions and image edits create **new files beside each original**. Repeated 
 
 When required, Macaroni asks you to select the source folder to grant write access and remembers the scoped bookmark. If access is denied, it reports the problem instead of silently using another destination. The older shared Exports folder is not the default output location anymore.
 
-Add files to the shelf by dropping onto Shelf or into the shelf itself. Select files with normal macOS selection gestures, use Command-A when the shelf is focused, and choose Copy or Move before dragging out to Finder. Copy retains sources; the optional Clear after copy setting removes successfully delivered shelf references and closes the shelf when empty. Command-C alone retains references until delivery is confirmed. Move copies and verifies delivery before deleting each source and removing successful shelf entries. Cancelled drops that never request delivery do not remove files. Failed items remain available. The shelf's menu also offers explicit Copy/Move to folder commands and processing actions.
+Drop files or folders onto **Shelf** or drag them into the shelf panel. Select items with normal macOS selection gestures or press Command-A when the shelf is focused. Choose **Copy** or **Move**, then drag the selection into Finder. The shelf menu also offers **Copy to folder…** and **Move to folder…**.
+
+Copy keeps the originals. **Clear after copy** removes references after successful delivery and closes an empty shelf. Move verifies the copy before removing the original and its shelf reference. Macaroni checks nested folder contents and prevents transfers into the source folder or its subfolders. Failed and cancelled deliveries keep their shelf references. Command-C copies the references to the clipboard.
 
 Clipboard collection starts enabled on a fresh installation; an explicit Pause choice persists across restarts. The default popup shortcut is Option-Shift-V; prior Fn settings migrate automatically, while other explicit shortcut choices are retained and can be changed in Settings. Enter commits the highlighted item and returns focus; Command-V commits, dismisses and pastes into the original app, with macOS Accessibility access required for the automatic paste. Escape cancels without changing clipboard contents. File history restores file URLs/bookmarks; copying image pixels remains a distinct image entry. Its local history is not an encrypted password vault. Recording permissions depend on macOS. The shelf uses the file pasteboard; the editor and image tools process locally without an account or network connection.
 

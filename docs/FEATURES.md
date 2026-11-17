@@ -1,7 +1,7 @@
 # Complete feature reference
 
 
-This reference describes **Macaroni 0.5.8 / build 18**, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
+This reference describes **Macaroni 0.5.8 / build 18**, including the Shelf folder update, organized by input type and module. It distinguishes actions offered in the Shift-drag popup from actions reached through the shelf or editor.
 
 ### A. File types at a glance
 
@@ -93,16 +93,16 @@ The editor supports Markdown with a math subset, not an Overleaf replacement or 
 
 **File shelf**
 
-- Collect references to files from different folders without moving them just by staging
+- Collect references to files and folders from different locations without moving them just by staging
 - Add through the Shelf drop target, drag into the panel or use Add files
 - Switch **List / Icons** independently of **Copy / Move**; resize the panel and retain its size/view preference
 - Native single/multiple selection, Command-A, Command-C, filenames/sizes, and Space/double-click preview
-- Drag files into Finder or use **Copy to folder / Move to folder**; copy preserves originals; move removes sources only after verified delivery
+- Drag files or folders into Finder or use **Copy to folder / Move to folder**. Copy preserves originals. Move removes originals after verifying delivery, including nested folder contents.
 - Optional **Clear after copy** removes successfully delivered references; cancelled/failed deliveries and unselected items remain
 - **Process selected** exposes compatible processing actions and saved workflows; with no explicit selection it uses all shelf references, and incompatible inputs may be skipped
 - Remove selected references or Clear shelf without deleting source files; an empty shelf hides
 
-Shelf transfer operations support regular files; directory transfer is not an included operation. Preview availability for unfamiliar formats follows macOS.
+Choose a destination outside the folder you’re transferring. Preview availability follows macOS.
 
 **Clipboard history**
 
